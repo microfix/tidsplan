@@ -1,0 +1,734 @@
+/* --- Raffineret Modern UI Design System (Komplet v2) --- */
+:root {
+    /* --- Dark Theme Colors Inspired by Image --- */
+
+    /* Accent 1: Pink (User Request) */
+    --primary: #fc48a3;
+    --primary-light: #fd70b9;
+    --primary-dark: #e82c8e;
+    --primary-rgb: 252, 72, 163;
+
+    /* Accent 2: Orange (User Request) */
+    --secondary: #fc8b04;
+    --secondary-light: #fda436;
+    --secondary-dark: #e07900;
+
+    /* Status Colors (Adjusted slightly for dark theme contrast) */
+    --success: #22C55E; /* Slightly brighter Green */
+    --success-light: #4ADE80;
+    --warning: #F59E0B; /* Yellow/Orange */
+    --warning-light: #FBBF24;
+    --danger: #F43F5E; /* Slightly brighter Red */
+    --danger-light: #FB7185;
+
+    /* Backgrounds: Dark Greys */
+    --background: #111827; /* Very Dark Blue/Grey */
+    --surface: #1F2937;    /* Dark Grey */
+    --surface-alt: #374151; /* Medium Dark Grey */
+
+    /* Text: Light Greys / White */
+    --text-primary: #F9FAFB;   /* Almost White */
+    --text-secondary: #D1D5DB; /* Light Grey */
+    --text-tertiary: #9CA3AF;  /* Medium Grey */
+    --text-disabled: #6B7280;  /* Darker Grey for disabled */
+
+    /* Borders: Darker Greys */
+    --border: #4B5563;       /* Grey border */
+    --border-light: #374151; /* Darker grey border */
+
+    /* Focus Ring (Adjusted for dark theme) */
+    --focus-ring-color: rgba(var(--primary-rgb), 0.3); /* Pink focus ring */
+
+    /* Mere subtile og lagdelte skygger */
+    --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+    --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.07), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 6px 10px -2px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+
+    /* Lidt mere afrundede hjørner for et blødere look */
+    --radius-sm: 6px;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --radius-full: 9999px; /* Til piller/cirkler */
+
+    --spacing-xs: 0.25rem;  /* 4px */
+    --spacing-sm: 0.5rem;   /* 8px */
+    --spacing-md: 1rem;     /* 16px */
+    --spacing-lg: 1.5rem;   /* 24px */
+    --spacing-xl: 2rem;     /* 32px */
+    --spacing-2xl: 2.5rem;  /* 40px */
+
+    --transition-duration: 0.2s;
+    --transition-timing: ease-in-out;
+    --focus-ring-color: rgba(var(--primary-rgb), 0.2);
+}
+
+/* --- Global Reset & Defaults --- */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0 solid var(--border); /* Nulstil border */
+    -webkit-tap-highlight-color: transparent; /* Fra inline style */
+    touch-action: manipulation; /* Undgå zoom ved dobbelt-tap på knapper etc. */
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%; /* Forhindr font scaling i iOS */
+}
+
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    margin: 0;
+    padding: var(--spacing-lg); /* Brug spacing variabler */
+    background-color: var(--background);
+    color: var(--text-primary);
+    line-height: 1.6; /* Lidt mere luft */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: contain;
+}
+
+/* --- Typografi --- */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: var(--spacing-sm);
+}
+
+h1 {
+    font-size: 2rem; /* 32px */
+    letter-spacing: -0.02em;
+    margin-bottom: var(--spacing-lg);
+}
+
+h2 {
+    font-size: 1.5rem; /* 24px */
+    letter-spacing: -0.015em;
+    color: var(--text-secondary); /* Bevar sekundær farve her */
+     margin-bottom: var(--spacing-md);
+}
+
+h3 {
+    font-size: 1.125rem; /* Til mindre sektionsoverskrifter */
+     margin-bottom: var(--spacing-md);
+}
+
+h4 {
+     font-size: 1rem; /* Til f.eks. popups */
+     margin-bottom: var(--spacing-sm);
+}
+
+p {
+    margin-bottom: var(--spacing-md);
+    color: var(--text-secondary);
+}
+
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition-duration) var(--transition-timing);
+}
+
+a:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* --- Layout Komponenter --- */
+.section {
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background-color: var(--surface); /* Use dark surface */
+    border-radius: var(--radius); /* Slightly smaller radius */
+    box-shadow: none; /* Remove shadow for flatter look */
+    border: 1px solid var(--border);
+    transition: border-color var(--transition-duration) var(--transition-timing); /* Transition border */
+}
+
+.section:hover {
+    /* No transform/shadow change on hover for flatter look */
+    border-color: var(--border-light); /* Slightly lighter border on hover */
+}
+
+/* --- Formular Kontroller --- */
+/* Fælles base for inputs, selects, buttons */
+.form-control {
+    display: block; /* Gør dem til block-level som standard */
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md); /* 8px 16px */
+    min-height: 2.75rem; /* ca. 44px, god touch target size */
+    font-size: 0.9rem; /* Lidt større font */
+    line-height: 1.5;
+    color: var(--text-primary); /* Use light text */
+    background-color: var(--surface-alt); /* Use darker background for inputs */
+    background-clip: padding-box;
+    border: 1px solid var(--border); /* Use dark border */
+    appearance: none; /* Fjern default OS styling */
+    border-radius: var(--radius-sm); /* Smaller radius for inputs */
+    box-shadow: none; /* Remove inner shadow */
+    transition: border-color var(--transition-duration) var(--transition-timing),
+                box-shadow var(--transition-duration) var(--transition-timing);
+}
+
+.form-control::placeholder {
+    color: var(--text-tertiary); /* Use medium grey for placeholder */
+    opacity: 1; /* Firefox bugfix */
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary); /* Use pink border on focus */
+    box-shadow: 0 0 0 3px var(--focus-ring-color); /* Remove inner shadow, keep focus ring */
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+    background-color: var(--background); /* Use darkest background for disabled */
+    color: var(--text-disabled); /* Use disabled text color */
+    border-color: var(--border); /* Use standard dark border */
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Specifikke input/select typer */
+input[type="text"].form-control, /* Vær mere specifik */
+input[type="email"].form-control,
+input[type="password"].form-control,
+input[type="number"].form-control,
+input[type="search"].form-control,
+input[type="tel"].form-control,
+input[type="url"].form-control,
+input[type="date"].form-control,
+textarea.form-control,
+select.form-control {
+    max-width: 350px; /* Lidt bredere max-width */
+}
+
+textarea.form-control {
+    min-height: 80px;
+    resize: vertical;
+}
+
+select.form-control {
+    /* Update SVG arrow color for dark mode */
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23D1D5DB' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"); /* Use --text-secondary color */
+    background-repeat: no-repeat;
+    background-position: right var(--spacing-md) center;
+    background-size: 1em 1em;
+    padding-right: calc(var(--spacing-md) * 2.5); /* Plads til pil */
+    /* Tydeligere Ramme om Dropdowns */
+    border-color: var(--border); /* Use standard dark border */
+}
+
+/* Sørg for at focus-stilen stadig er tydelig for selects */
+select.form-control:focus {
+     border-color: var(--primary); /* Bevar primær farve ved focus */
+     box-shadow: 0 0 0 3px var(--focus-ring-color); /* Remove inner shadow, keep focus ring */
+}
+
+/* --- Knapper --- */
+button,
+.button { /* Tilføj en .button klasse for a-tags mm. */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    width: auto; /* Knapper skal ikke være 100% som standard */
+    max-width: 220px;
+    padding: var(--spacing-sm) var(--spacing-md); /* Match form-control padding */
+    min-height: 2.75rem; /* Match form-control højde */
+    font-size: 0.9rem; /* Match form-control font */
+    font-weight: 500;
+    line-height: 1.5; /* Match form-control */
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap; /* Undgå knapombrydning */
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm); /* Smaller radius */
+    box-shadow: none; /* Flatter look */
+    background-color: var(--primary); /* Default to pink */
+    color: white; /* White text on pink */
+    transition: background-color var(--transition-duration) var(--transition-timing),
+                border-color var(--transition-duration) var(--transition-timing),
+                color var(--transition-duration) var(--transition-timing),
+                opacity var(--transition-duration) var(--transition-timing); /* Remove transform/shadow transitions */
+}
+
+button:focus-visible,
+.button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring-color); /* Only focus ring */
+}
+
+button:hover:not(:disabled),
+.button:hover:not(:disabled) {
+    /* Use opacity or background change for hover, no transform/shadow */
+    opacity: 0.9;
+}
+
+button:active:not(:disabled),
+.button:active:not(:disabled) {
+    /* Subtle active state */
+    opacity: 0.8;
+}
+
+button:disabled,
+.button:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    box-shadow: none;
+    /* transform: none; */ /* Already removed */
+}
+
+/* Primær knap (behøver ikke .primary hvis det er default) */
+button.primary,
+.button.primary {
+    background-color: var(--primary); /* Pink */
+    color: white; /* White text */
+    border-color: var(--primary); /* Pink border */
+}
+
+button.primary:hover:not(:disabled),
+.button.primary:hover:not(:disabled) {
+    background-color: var(--primary-dark); /* Darker pink */
+    border-color: var(--primary-dark); /* Darker pink border */
+}
+
+/* Sekundær knap */
+button.secondary,
+.button.secondary {
+    background-color: var(--surface-alt); /* Medium dark grey */
+    color: var(--text-primary); /* Light text */
+    border-color: var(--surface-alt); /* Match background */
+    box-shadow: none;
+}
+
+button.secondary:hover:not(:disabled),
+.button.secondary:hover:not(:disabled) {
+    background-color: var(--border); /* Slightly lighter grey on hover */
+    color: var(--text-primary);
+    border-color: var(--border);
+    box-shadow: none;
+}
+
+/* Knap med spinner */
+button.loading .spinner {
+    display: inline-block; /* Vis spinner */
+}
+button.loading span { /* Skjul evt. tekst */
+   /* display: none; */
+   opacity: 0.5;
+}
+button .spinner { /* Skjul spinner som standard */
+    display: none;
+    width: 1em;
+    height: 1em;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border .75s linear infinite;
+}
+@keyframes spinner-border {
+  to { transform: rotate(360deg); }
+}
+
+/* Touch target - gør knapper/links lidt nemmere at ramme */
+.touch-target {
+    min-width: 44px;
+    min-height: 44px;
+    /* Juster padding for at opnå min. størrelse hvis nødvendigt */
+    /* padding: max(var(--spacing-sm), calc((44px - 1.5em * 0.9rem) / 2)) var(--spacing-md); */
+}
+
+/* --- Visuel Skjulning af Elementer (Tilgængelig) --- */
+.visually-hidden {
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px, 1px, 1px, 1px);
+    white-space: nowrap; /* Forhindrer ombrydning */
+    border: 0;
+}
+
+/* --- Custom File Input Styling --- */
+.file-input-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    width: 100%;
+    max-width: 350px; /* Matcher andre inputs */
+    min-height: 2.75rem; /* Matcher højde */
+    /* Valgfri: Giv den et input-lignende udseende */
+    /* background-color: var(--surface); */
+    /* border: 1px solid var(--border); */
+    /* border-radius: var(--radius); */
+    /* padding: 2px var(--spacing-sm); */
+    /* box-shadow: var(--shadow-inner); */
+}
+
+.file-input-container .file-trigger-button {
+    flex-shrink: 0;
+    max-width: 150px; /* Eller juster efter behov */
+}
+
+.file-input-container .file-name {
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    cursor: default;
+    line-height: 1.5;
+    /* Tilføj title attribut i HTML for fuldt navn ved hover */
+}
+
+/* --- Summary Box --- */
+#summaryBox {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Justeret min bredde */
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+#summaryBox > div {
+    background-color: var(--surface); /* Dark surface */
+    padding: var(--spacing-lg);
+    border-radius: var(--radius); /* Match section radius */
+    box-shadow: none; /* Remove shadow */
+    border: 1px solid var(--border); /* Dark border */
+    transition: border-color var(--transition-duration) var(--transition-timing);
+    text-align: center;
+}
+#summaryBox > div:hover {
+    /* No transform/shadow change */
+    border-color: var(--border-light); /* Lighter border on hover */
+}
+#summaryBox .value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: var(--spacing-xs);
+    display: block;
+    color: var(--text-primary); /* Default color (light text) */
+}
+#summaryBox .label {
+    font-size: 0.875rem;
+    color: var(--text-secondary); /* Light grey label */
+    font-weight: 500;
+    display: block;
+}
+/* Status farver for VÆRDIEN, label forbliver sekundær */
+/* Use lighter status colors for values */
+#summaryBox .completed-count { color: var(--success-light); }
+#summaryBox .overdue-count { color: var(--danger-light); }
+#summaryBox .near-due-count { color: var(--warning-light); }
+/* Du kan også tilføje farver for inProgressTasks, notStartedTasks osv. hvis ønsket */
+/* #summaryBox .inProgressTasks { color: var(--secondary); } */
+/* #summaryBox .notStartedTasks { color: var(--text-tertiary); } */
+
+/* --- Controls Layout --- */
+#controls { /* Removed #compareControls */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+    padding: var(--spacing-lg);
+    background: var(--surface); /* Use dark surface */
+    border-radius: var(--radius); /* Match section radius */
+    box-shadow: none; /* Remove shadow */
+    border: 1px solid var(--border); /* Use dark border */
+}
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+.control-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary); /* Use light grey for labels */
+    margin-bottom: var(--spacing-xs);
+}
+.control-group input.form-control, /* Vær specifik */
+.control-group select.form-control,
+.control-group button.button,
+.control-group .file-input-container { /* Style containeren */
+    width: 100%; /* Fyld containeren */
+    max-width: none; /* Overskriv default max-width for inputs herinde */
+}
+
+/* --- Tabel Design --- */
+#viewerTableContainer {
+    background: var(--surface); /* Dark surface */
+    border-radius: var(--radius); /* Match section radius */
+    box-shadow: none; /* Remove shadow */
+    overflow-x: auto;
+    margin-top: var(--spacing-xl);
+    border: 1px solid var(--border); /* Dark border */
+}
+#viewerTable {
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+#viewerTable th,
+#viewerTable td {
+    padding: var(--spacing-sm) var(--spacing-md);
+    text-align: left;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border); /* Dark border */
+    white-space: nowrap;
+}
+#viewerTable th {
+    background-color: var(--surface-alt); /* Medium dark grey header */
+    color: var(--text-primary); /* Light text */
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom-width: 1px; /* Thinner bottom border */
+    border-bottom-color: var(--border-light); /* Slightly lighter border */
+    cursor: pointer;
+}
+#viewerTable th .sort-icon {
+    display: inline-block;
+    min-width: 1em; /* Plads til ikon */
+}
+#viewerTable tbody tr:last-child td {
+    border-bottom: none; /* Remove border on last row */
+}
+#viewerTable tbody tr {
+    transition: background-color 0.15s ease-in-out; /* Keep transition */
+}
+#viewerTable tbody tr:hover td {
+    background-color: var(--surface-alt); /* Hover with medium dark grey */
+}
+
+/* --- Progress Bars & Percentage Text --- */
+/* Style the container cell */
+#viewerTable td[data-column="Activity % Complete(%)"] {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm); /* Space between text and bar */
+}
+
+/* Style the percentage text */
+.percentage-text {
+    flex-shrink: 0; /* Prevent text from shrinking */
+    min-width: 40px; /* Ensure space for "100%" */
+    text-align: right;
+    font-weight: 500;
+    color: var(--text-secondary); /* Use secondary text color */
+}
+
+/* Style the progress bar container */
+.progress-bar-container {
+    background-color: var(--background); /* Darkest background for container */
+    border-radius: var(--radius-full);
+    overflow: hidden;
+    height: 1rem;
+    border: 1px solid var(--border); /* Use standard dark border */
+    position: relative;
+    box-shadow: none; /* Remove inner shadow */
+    min-width: 80px;
+    flex-grow: 1; /* Allow bar container to fill remaining space */
+}
+.progress-bar {
+    height: 100%;
+    transition: width var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1),
+                background-color var(--transition-duration) var(--transition-timing);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--background); /* Dark text on light bars */
+    /* Text is no longer inside the bar */
+    /* font-size: 0.7rem; */
+    /* font-weight: 600; */
+    /* padding: 0 var(--spacing-sm); */
+    box-shadow: none;
+}
+.progress-bar span {
+    /* Text span removed from inside the bar */
+/* Use lighter status colors for the bars themselves for contrast */
+.progress-bar.low { background-color: var(--warning-light); color: var(--text-primary); } /* Yellow bar, dark text */
+.progress-bar.medium { background-color: var(--primary-light); color: var(--text-primary); } /* Light pink bar, dark text */
+.progress-bar.high { background-color: var(--secondary-light); color: var(--text-primary); } /* Light orange bar, dark text */
+.progress-bar.complete { background-color: var(--success-light); color: var(--text-primary); } /* Light green bar, dark text */
+
+/* --- Status Styling i Tabel --- */
+#viewerTable .overdue td {
+    /* color: var(--danger) !important; */ /* Kan skabe specificitets problemer */
+    /* Use subtle background tint and text color for status */
+    background-color: rgba(var(--danger-rgb, 244, 63, 94), 0.1) !important;
+}
+#viewerTable .overdue td:not(.progress-bar-container *) {
+     color: var(--danger-light); /* Lighter red text */
+}
+
+#viewerTable .near-due td {
+    background-color: rgba(var(--warning-rgb, 245, 158, 11), 0.1) !important;
+}
+#viewerTable .near-due td:not(.progress-bar-container *) {
+    color: var(--warning-light); /* Lighter yellow text */
+}
+
+#viewerTable .completed td {
+    background-color: rgba(var(--success-rgb, 34, 197, 94), 0.1) !important;
+}
+#viewerTable .completed td:not(.progress-bar-container *) {
+    color: var(--success-light); /* Lighter green text */
+}
+
+/* Hover på status rækker skal IKKE ændre baggrund */
+#viewerTable .overdue:hover td,
+#viewerTable .near-due:hover td,
+#viewerTable .completed:hover td {
+    background-color: inherit; /* Arv den farve, der allerede er sat via !important */
+}
+
+/* --- Group Headers i Tabel --- */
+#viewerTable tr.group-header td {
+    background-color: var(--background); /* Darkest background for group header */
+    font-weight: 700;
+    color: var(--text-primary); /* Light text */
+    padding: var(--spacing-md) var(--spacing-md);
+    font-size: 0.9rem;
+    letter-spacing: 0.02em;
+    border-top: 1px solid var(--border); /* Dark border */
+    border-bottom: 1px solid var(--border); /* Dark border */
+    cursor: pointer;
+}
+#viewerTable tr.group-header:first-child td {
+    border-top: none;
+}
+#viewerTable tr.group-header:hover td {
+    background-color: var(--surface-alt); /* Lighter dark grey on hover */
+}
+#viewerTable tr.group-header.collapsed td::before {
+    content: "▶ "; /* Pil ikon for collapsed */
+    display: inline-block;
+    margin-right: var(--spacing-sm);
+}
+#viewerTable tr.group-header:not(.collapsed) td::before {
+    content: "▼ "; /* Pil ikon for expanded */
+    display: inline-block;
+    margin-right: var(--spacing-sm);
+}
+
+/* Skjul rækker under en collapsed gruppe */
+#viewerTable tbody tr.hidden-row {
+    display: none;
+}
+
+/* --- Skjulte Kolonner --- */
+.hidden-col {
+    display: none !important; /* Sørg for at skjule dem helt */
+}
+
+/* --- Kolonne Vælger (Popup) --- */
+#columnSelector {
+    position: absolute;
+    background: var(--surface); /* Dark surface */
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md); /* Keep some shadow for popup */
+    border: 1px solid var(--border-light); /* Lighter border for popup */
+    padding: var(--spacing-lg);
+    min-width: 250px;
+    z-index: 100;
+    display: none;
+    margin-top: var(--spacing-xs);
+}
+#columnSelector h4 {
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-primary); /* Light text */
+}
+.column-toggle-container {
+    max-height: 250px;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
+    background: var(--background); /* Darkest background for scroll area */
+    border-radius: var(--radius-sm);
+    margin: var(--spacing-md) 0;
+    border: 1px solid var(--border); /* Dark border */
+}
+.column-toggle-container label {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 0.875rem;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background-color 0.15s ease;
+    gap: var(--spacing-sm);
+}
+.column-toggle-container label:hover {
+    background-color: var(--surface-alt); /* Medium dark grey on hover */
+}
+.column-toggle-container input[type="checkbox"] {
+    margin: 0;
+    width: 1em;
+    height: 1em;
+    accent-color: var(--primary); /* Pink accent for checkbox */
+    flex-shrink: 0;
+}
+#columnSelector button {
+    width: 100%;
+    margin-top: var(--spacing-md);
+}
+#columnSelector button:first-of-type { /* Lidt luft over første knap */
+   /* Ingen margin nødvendig hvis .column-toggle-container har margin-bottom */
+}
+
+
+/* --- Comparison Report Styles Removed --- */
+
+/* Keep error message style as it might be useful elsewhere */
+.error-message {
+    color: var(--danger-light); /* Lighter danger text */
+    font-weight: 500;
+    background-color: rgba(var(--danger-rgb, 244, 63, 94), 0.2); /* Danger background */
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+    body { padding: var(--spacing-md); }
+    h1 { font-size: 1.75rem; }
+    h2 { font-size: 1.25rem; }
+    .section { padding: var(--spacing-md); margin-bottom: var(--spacing-lg); }
+    #summaryBox { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: var(--spacing-md); }
+    #summaryBox .value { font-size: 1.875rem; }
+    #summaryBox > div { padding: var(--spacing-md); }
+    #controls, #compareControls { grid-template-columns: 1fr; gap: var(--spacing-md); padding: var(--spacing-md); }
+    #viewerTable th, #viewerTable td { padding: var(--spacing-sm); white-space: normal; vertical-align: top; } /* Removed comparison report */
+    #viewerTable th { font-size: 0.75rem; white-space: nowrap; } /* Removed comparison report */
+    .file-input-container { flex-wrap: wrap; /* Tillad ombrydning */ max-width: none; }
+    .file-input-container .file-trigger-button { max-width: 120px; }
+    .file-input-container .file-name { min-width: 150px; /* Undgå at det bliver for smalt */ }
+    #columnSelector { min-width: 200px; }
+}
+
+/* --- Moderne Scrollbar --- */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--background); border-radius: 4px; } /* Dark track */
+::-webkit-scrollbar-thumb { background: var(--surface-alt); border-radius: 4px; border: 2px solid var(--background); } /* Darker thumb */
+::-webkit-scrollbar-thumb:hover { background: var(--border); } /* Lighter thumb on hover */

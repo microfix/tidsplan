@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Tidsplan Viewer & Sammenligning (Touch Opt.)</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* --- Style for at skjule det originale file input --- */
+        .visually-hidden {
+            position: absolute !important;
+            height: 1px;
+            width: 1px;
+            overflow: hidden;
+            clip: rect(1px, 1px, 1px, 1px);
+            white-space: nowrap; /* Forhindrer ombrydning */
+            border: 0;
+        }
+
+        /* --- Styling for custom file input container --- */
+        .file-input-container {
+            display: flex; /* Arranger knap og filnavn ved siden af hinanden */
+            align-items: center;
+            gap: var(--spacing-sm); /* Lidt plads imellem */
+            width: 100%;
+            max-width: 350px; /* Matcher andre inputs */
+            /* Kan evt. tilføje en kant som et normalt input, hvis ønsket */
+            /* border: 1px solid var(--border); */
+            /* border-radius: var(--radius); */
+            /* padding: 2px; */ /* Lille padding for at indeholde knap+tekst */
+        }
+
+        .file-input-container .file-trigger-button {
+            /* Brug 'secondary' knap stil eller en custom stil */
+            flex-shrink: 0; /* Forhindrer knappen i at blive for lille */
+            max-width: 150px; /* Juster efter behov */
+        }
+
+        .file-input-container .file-name {
+            flex-grow: 1; /* Tillad filnavnet at tage resterende plads */
+            /* Anvend truncate her */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            cursor: default; /* Vis at teksten ikke er klikbar */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="section" id="viewerSection">
+        <h1>Projekt Tidsplan Viewer</h1>
+
+        <div id="summaryBox">
+            <!-- ... Summary box indhold ... -->
+             <div><span class="value" id="totalTasks">0</span><span class="label total-count">Total Opgaver</span></div>
+             <div><span class="value" id="completedTasks">0</span><span class="label completed-count">Fuldført</span></div>
+             <div><span class="value" id="inProgressTasks">0</span><span class="label">I Gang</span></div>
+             <div><span class="value" id="notStartedTasks">0</span><span class="label">Ikke Startet</span></div>
+             <div><span class="value" id="overdueTasks">0</span><span class="label overdue-count">Forsinket</span></div>
+             <div><span class="value" id="nearDueTasks">0</span><span class="label near-due-count">Snart Deadline</span></div>
+             <div><span class="value" id="upcomingTasks">0</span><span class="label">Starter Snart</span></div>
+        </div>
+
+        <div id="controls">
+             <!-- Opdateret File Input Struktur -->
+             <div class="control-group">
+                 <label for="csvFileInput">Vælg CSV fil:</label>
+                 <div class="file-input-container">
+                    <input type="file" id="csvFileInput" accept=".csv" class="visually-hidden">
+                    <!-- Use a label styled as a button to trigger the hidden input -->
+                    <label for="csvFileInput" class="file-trigger-button secondary button">Vælg Fil</label>
+                    <span id="viewerFileName" class="file-name" title="Ingen fil valgt">Ingen fil valgt</span>
+                 </div>
+            </div>
+             <div class="control-group"> <label for="searchInput">Fritekst Søg:</label> <input type="text" id="searchInput" placeholder="Søg i ID, Navn, Rum..." class="form-control"> </div>
+             <div class="control-group"> <label for="filterBuilding">Bygning:</label> <select id="filterBuilding" class="form-control"><option value="">Alle</option></select> </div>
+             <div class="control-group"> <label for="filterZone">Zone:</label> <select id="filterZone" class="form-control"><option value="">Alle</option></select> </div>
+             <div class="control-group"> <label for="filterDiscipline">Faggruppe:</label> <select id="filterDiscipline" class="form-control"><option value="">Alle</option></select> </div>
+             <div class="control-group"> <label for="filterContractor">Entreprenør:</label> <select id="filterContractor" class="form-control"><option value="">Alle</option></select> </div>
+             <div class="control-group"> <label for="filterResponsible">Ansvarlig:</label> <select id="filterResponsible" class="form-control"><option value="">Alle</option></select> </div>
+             <div class="control-group">
+                 <label for="filterStatus">Status:</label>
+                 <select id="filterStatus" class="form-control">
+                     <option value="">Alle</option>
+                     <option value="not_started">Ikke startet (0%)</option>
+                     <option value="in_progress">I gang (>0%, <100%)</option>
+                     <option value="completed">Fuldført (100%)</option>
+                     <option value="overdue">Forsinket</option>
+                     <option value="near_due">Tæt på deadline</option>
+                     <option value="upcoming_start">Starter snart</option>
+                 </select>
+             </div>
+             <div class="control-group"> <label for="filterStartDateAfter">Start Efter:</label> <input type="date" id="filterStartDateAfter" class="form-control"> </div>
+             <div class="control-group"> <label for="filterFinishDateBefore">Slut Før:</label> <input type="date" id="filterFinishDateBefore" class="form-control"> </div>
+
+             <div class="control-group">
+                 <label for="groupingSelect">Gruppér efter:</label>
+                 <select id="groupingSelect" class="form-control">
+                     <option value="">Ingen Gruppering</option>
+                     <option value="Building">Bygning</option>
+                     <option value="Discipline">Faggruppe</option>
+                     <option value="PPV_L3_03 ZONE">Zone</option>
+                     <option value="PPV_L3_05 Contractor">Entreprenør</option>
+                 </select>
+             </div>
+
+              <div class="control-group column-selector-group">
+                 <label>Vis/Skjul Kolonner:</label>
+                 <div style="position: relative;">
+                     <!-- Tilføjet .button klassen for konsistens -->
+                     <button type="button" id="toggleColumnSelectorBtn" class="button touch-target">Administrér</button>
+                     <div id="columnSelector" style="display: none;"> <!-- Skjul som standard -->
+                         <h4>Vælg synlige kolonner</h4>
+                         <div id="columnToggles" class="column-toggle-container">
+                             <!-- Checkboxes tilføjes via JS -->
+                         </div>
+                         <button type="button" id="applyColumnChanges" class="button touch-target">Anvend</button>
+                         <button type="button" id="closeColumnSelector" class="button touch-target secondary">Luk</button>
+                     </div>
+                 </div>
+             </div>
+             <!-- Wrap reset button in control-group for consistent alignment -->
+             <div class="control-group">
+                 <button id="resetFilters" class="button touch-target secondary" style="margin-top: auto;">Nulstil Filtre</button> <!-- Added margin-top: auto to align with bottom if needed -->
+             </div>
+        </div>
+
+        <div id="viewerTableContainer">
+            <table id="viewerTable">
+                <!-- ... Tabel head og body ... -->
+                 <thead>
+                    <tr id="viewerHeaderRow">
+                        <th data-column="Activity ID">ID <span class="sort-icon"></span></th>
+                        <th data-column="Building">Bygning <span class="sort-icon"></span></th>
+                        <th data-column="PPV_L3_03 ZONE">Zone <span class="sort-icon"></span></th>
+                        <th data-column="PPV_L3 Room Number">Rum <span class="sort-icon"></span></th>
+                        <th data-column="Activity Name">Aktivitetsnavn <span class="sort-icon"></span></th>
+                        <th data-column="(*)Start">Start <span class="sort-icon"></span></th>
+                        <th data-column="(*)Finish">Slut <span class="sort-icon"></span></th>
+                        <th data-column="Original Duration(d)">Orig. Var. <span class="sort-icon"></span></th>
+                        <th data-column="Remaining Duration(d)">Rest. Var. <span class="sort-icon"></span></th>
+                        <th data-column="Activity % Complete(%)">% Færdig <span class="sort-icon"></span></th>
+                        <th data-column="Discipline">Faggruppe <span class="sort-icon"></span></th>
+                        <th data-column="PPV_L3_04 Task Responsible">Ansvarlig <span class="sort-icon"></span></th>
+                        <th data-column="PPV_L3_05 Contractor">Entreprenør <span class="sort-icon"></span></th>
+                        <th data-column="Comments">Kommentarer <span class="sort-icon"></span></th>
+                        <th data-column="NNE_Global_Proc._Package" class="hidden-col">Proc. Pakke <span class="sort-icon"></span></th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleTableBody">
+                    <tr><td colspan="15">Vælg venligst en CSV-fil for at vise tidsplanen.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Comparison Section Removed -->
+
+    <script src="script.js"></script>
+
+</body>
+</html>
