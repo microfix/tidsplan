@@ -73,9 +73,8 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    border: 0 solid var(--border); /* Nulstil border */
-    -webkit-tap-highlight-color: transparent; /* Fra inline style */
-    touch-action: manipulation; /* Undgå zoom ved dobbelt-tap på knapper etc. */
+    border: 0 solid var(--border);
+    -webkit-tap-highlight-color: transparent;
 }
 
 html {
@@ -87,14 +86,18 @@ html {
 body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
     margin: 0;
-    padding: var(--spacing-lg); /* Brug spacing variabler */
+    padding: var(--spacing-lg);
     background-color: var(--background);
     color: var(--text-primary);
-    line-height: 1.6; /* Lidt mere luft */
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
     overscroll-behavior-y: contain;
+    user-select: text;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
 }
 
 /* --- Typografi --- */
@@ -399,36 +402,46 @@ button .spinner { /* Skjul spinner som standard */
 /* --- Summary Box --- */
 #summaryBox {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Justeret min bredde */
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: var(--spacing-lg);
     margin-bottom: var(--spacing-xl);
 }
 #summaryBox > div {
-    background-color: var(--surface); /* Dark surface */
+    background-color: var(--surface);
     padding: var(--spacing-lg);
-    border-radius: var(--radius); /* Match section radius */
-    box-shadow: none; /* Remove shadow */
-    border: 1px solid var(--border); /* Dark border */
+    border-radius: var(--radius);
+    box-shadow: none;
+    border: 1px solid var(--border);
     transition: border-color var(--transition-duration) var(--transition-timing);
     text-align: center;
+    /* Tilføj fast højde og bredde */
+    height: 120px; /* Fast højde */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 #summaryBox > div:hover {
-    /* No transform/shadow change */
-    border-color: var(--border-light); /* Lighter border on hover */
+    border-color: var(--border-light);
 }
 #summaryBox .value {
-    font-size: 2.25rem;
+    font-size: 2rem; /* Lidt mindre font-size for bedre fit */
     font-weight: 700;
     line-height: 1.1;
     margin-bottom: var(--spacing-xs);
     display: block;
-    color: var(--text-primary); /* Default color (light text) */
+    color: var(--text-primary);
 }
 #summaryBox .label {
     font-size: 0.875rem;
-    color: var(--text-secondary); /* Light grey label */
+    color: var(--text-secondary);
     font-weight: 500;
     display: block;
+    /* Tilføj max-width for at undgå at teksten påvirker boksens bredde */
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 /* Status farver for VÆRDIEN, label forbliver sekundær */
 /* Use lighter status colors for values */
@@ -549,8 +562,11 @@ button .spinner { /* Skjul spinner som standard */
     min-width: 80px;
     flex-grow: 1; /* Allow bar container to fill remaining space */
 }
+
+/* Style the progress bar itself */
 .progress-bar {
     height: 100%;
+    width: 0%; /* Start at 0% width */
     transition: width var(--transition-duration) cubic-bezier(0.4, 0, 0.2, 1),
                 background-color var(--transition-duration) var(--transition-timing);
     border-radius: var(--radius-full);
@@ -558,19 +574,26 @@ button .spinner { /* Skjul spinner som standard */
     align-items: center;
     justify-content: center;
     color: var(--background); /* Dark text on light bars */
-    /* Text is no longer inside the bar */
-    /* font-size: 0.7rem; */
-    /* font-weight: 600; */
-    /* padding: 0 var(--spacing-sm); */
     box-shadow: none;
 }
-.progress-bar span {
-    /* Text span removed from inside the bar */
-/* Use lighter status colors for the bars themselves for contrast */
-.progress-bar.low { background-color: var(--warning-light); color: var(--text-primary); } /* Yellow bar, dark text */
-.progress-bar.medium { background-color: var(--primary-light); color: var(--text-primary); } /* Light pink bar, dark text */
-.progress-bar.high { background-color: var(--secondary-light); color: var(--text-primary); } /* Light orange bar, dark text */
-.progress-bar.complete { background-color: var(--success-light); color: var(--text-primary); } /* Light green bar, dark text */
+
+/* Progress bar colors based on completion */
+.progress-bar.low { 
+    background-color: var(--warning-light); 
+    color: var(--text-primary); 
+} /* Yellow bar, dark text */
+.progress-bar.medium { 
+    background-color: var(--primary-light); 
+    color: var(--text-primary); 
+} /* Light pink bar, dark text */
+.progress-bar.high { 
+    background-color: var(--secondary-light); 
+    color: var(--text-primary); 
+} /* Light orange bar, dark text */
+.progress-bar.complete { 
+    background-color: var(--success-light); 
+    color: var(--text-primary); 
+} /* Light green bar, dark text */
 
 /* --- Status Styling i Tabel --- */
 #viewerTable .overdue td {

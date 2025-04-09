@@ -103,90 +103,201 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Viewer Functions ---
-    function handleFileSelectViewer(event) {
-        // Denne funktion håndterer IKKE længere filnavnet direkte.
-        // setupCustomFileInput håndterer opdatering af viewerFileNameSpan.
-         const file = event.target.files[0]; if (!file) return;
-         // viewerFileNameSpan.textContent = file.name; // FJERNES - håndteres af setupCustomFileInput
+    function processData(data) {
+        // Nulstil data arrays og kolonner
+        rawData = [];
+        filteredData = [];
+        ALL_COLUMNS.length = 0;
+        columnVisibility = {};
+        columnTogglesDiv.innerHTML = '';
 
-         // Resten af funktionen er den samme...
-         rawData = []; filteredData = []; ALL_COLUMNS.length = 0; columnVisibility = {};
-         columnTogglesDiv.innerHTML = '';
-         clearDropdownOptions(buildingFilter); clearDropdownOptions(zoneFilter); clearDropdownOptions(disciplineFilter); clearDropdownOptions(contractorFilter); clearDropdownOptions(responsibleFilter);
-         tableBody.innerHTML = `<tr><td colspan="15">Indlæser fil...</td></tr>`;
-         resetSummaryBox();
+        // Hvis data kommer fra parseCSV
+        if (data.headers && Array.isArray(data.data)) {
+            rawData = data.data;
+            const headersFromFile = data.headers;
+            console.log("Læste headers fra fil:", headersFromFile);
 
-         const reader = new FileReader();
-         reader.onload = function(e) {
-             try {
-                 const parseResult = parseCSV(e.target.result);
-                 rawData = parseResult.data;
-                 const headersFromCSV = parseResult.headers;
-                 console.log("Læste headers fra CSV:", headersFromCSV);
+            // Find Activity ID Key
+            const potentialIdKeys = ['Activity ID', 'Activity Id', 'ID', 'Task ID', 'Aktivitets ID'];
+            let foundActivityIdKey = null;
+            for (const key of potentialIdKeys) {
+                if (headersFromFile.includes(key)) {
+                    foundActivityIdKey = key;
+                    break;
+                }
+            }
+            if (!foundActivityIdKey && rawData.length > 0) {
+                throw new Error(`Kunne ikke finde en passende nøglekolonne i filens headers: ${headersFromFile.join(', ')}`);
+            }
+            ACTIVITY_ID_KEY = foundActivityIdKey;
+            console.log(`Bruger '${ACTIVITY_ID_KEY}' som nøglekolonne.`);
 
-                 // Find Activity ID Key (robust check)
-                 const potentialIdKeys = ['Activity ID', 'Activity Id', 'ID', 'Task ID', 'Aktivitets ID'];
-                 let foundActivityIdKey = null;
-                 for (const key of potentialIdKeys) {
-                    if (headersFromCSV.includes(key)) {
+            // Opdater kolonner
+            if (rawData.length > 0 || headersFromFile.length > 0) {
+                const headersInHtml = tableHeaderRow ? Array.from(tableHeaderRow.querySelectorAll('th')).map(th => th.dataset.column).filter(Boolean) : [];
+                ALL_COLUMNS = [...headersInHtml];
+                headersFromFile.forEach(header => {
+                    if (!ALL_COLUMNS.includes(header)) ALL_COLUMNS.push(header);
+                });
+            }
+        } 
+        // Hvis data kommer fra XLSX
+        else if (Array.isArray(data)) {
+            rawData = data;
+            if (rawData.length > 0) {
+                const headersFromFile = Object.keys(rawData[0]);
+                console.log("Læste headers fra XLSX:", headersFromFile);
+
+                // Find Activity ID Key
+                const potentialIdKeys = ['Activity ID', 'Activity Id', 'ID', 'Task ID', 'Aktivitets ID'];
+                let foundActivityIdKey = null;
+                for (const key of potentialIdKeys) {
+                    if (headersFromFile.includes(key)) {
                         foundActivityIdKey = key;
                         break;
                     }
-                 }
-                 if (!foundActivityIdKey && rawData.length > 0) {
-                    throw new Error(`Kunne ikke finde en passende nøglekolonne (f.eks. 'Activity ID') i CSV-headeren: ${headersFromCSV.join(', ')}`);
-                 }
-                 ACTIVITY_ID_KEY = foundActivityIdKey;
-                 console.log(`Bruger '${ACTIVITY_ID_KEY}' som nøglekolonne.`);
+                }
+                if (!foundActivityIdKey) {
+                    throw new Error(`Kunne ikke finde en passende nøglekolonne i XLSX headers: ${headersFromFile.join(', ')}`);
+                }
+                ACTIVITY_ID_KEY = foundActivityIdKey;
+                console.log(`Bruger '${ACTIVITY_ID_KEY}' som nøglekolonne.`);
 
+                // Opdater kolonner
+                const headersInHtml = tableHeaderRow ? Array.from(tableHeaderRow.querySelectorAll('th')).map(th => th.dataset.column).filter(Boolean) : [];
+                ALL_COLUMNS = [...headersInHtml];
+                headersFromFile.forEach(header => {
+                    if (!ALL_COLUMNS.includes(header)) ALL_COLUMNS.push(header);
+                });
+            }
+        }
 
-                 if (rawData.length > 0 || headersFromCSV.length > 0) {
-                     const headersInHtml = tableHeaderRow ? Array.from(tableHeaderRow.querySelectorAll('th')).map(th => th.dataset.column).filter(Boolean) : [];
-                     ALL_COLUMNS = [...headersInHtml];
-                     headersFromCSV.forEach(header => { if (!ALL_COLUMNS.includes(header)) ALL_COLUMNS.push(header); });
+        // Behandl data
+        if (rawData.length > 0) {
+            // Find nøgler for zoner og andre felter
+            const zoneKey = ALL_COLUMNS.find(h => h.toUpperCase() === 'PPV_L3_03 ZONE') || 'PPV_L3_03 ZONE';
+            const packageKey = ALL_COLUMNS.find(h => h.toUpperCase() === 'NNE_GLOBAL_PROC._PACKAGE') || 'NNE_Global_Proc._Package';
+            const contractorKey = ALL_COLUMNS.find(h => h.toUpperCase() === 'PPV_L3_05 CONTRACTOR') || 'PPV_L3_05 Contractor';
+            const responsibleKey = ALL_COLUMNS.find(h => h.toUpperCase() === 'PPV_L3_04 TASK RESPONSIBLE') || 'PPV_L3_04 Task Responsible';
 
-                     // Definer de *forventede* key-navne fra CSV til filter-population
-                     const zoneKey = headersFromCSV.find(h => h.toUpperCase() === 'PPV_L3_03 ZONE') || 'PPV_L3_03 ZONE';
-                     const packageKey = headersFromCSV.find(h => h.toUpperCase() === 'NNE_GLOBAL_PROC._PACKAGE') || 'NNE_Global_Proc._Package';
-                     const contractorKey = headersFromCSV.find(h => h.toUpperCase() === 'PPV_L3_05 CONTRACTOR') || 'PPV_L3_05 Contractor';
-                     const responsibleKey = headersFromCSV.find(h => h.toUpperCase() === 'PPV_L3_04 TASK RESPONSIBLE') || 'PPV_L3_04 Task Responsible';
-                     console.log(`Bruger nøgler: Zone='${zoneKey}', Package='${packageKey}', Contractor='${contractorKey}', Responsible='${responsibleKey}'`);
+            // Tilføj bygning og disciplin til hver række
+            rawData.forEach(row => {
+                row['Building'] = getBuildingFromZone(row[zoneKey]);
+                row['Discipline'] = getDisciplineFromPackage(row[packageKey]);
+                if (!row.hasOwnProperty(contractorKey)) row[contractorKey] = '';
+                if (!row.hasOwnProperty(responsibleKey)) row[responsibleKey] = '';
+            });
 
-                     rawData.forEach(row => {
-                        row['Building'] = getBuildingFromZone(row[zoneKey]);
-                        row['Discipline'] = getDisciplineFromPackage(row[packageKey]);
-                        if (!row.hasOwnProperty(contractorKey)) row[contractorKey] = '';
-                        if (!row.hasOwnProperty(responsibleKey)) row[responsibleKey] = '';
-                     });
-                     if (!ALL_COLUMNS.includes('Building')) ALL_COLUMNS.push('Building');
-                     if (!ALL_COLUMNS.includes('Discipline')) ALL_COLUMNS.push('Discipline');
+            // Tilføj ekstra kolonner hvis de ikke findes
+            if (!ALL_COLUMNS.includes('Building')) ALL_COLUMNS.push('Building');
+            if (!ALL_COLUMNS.includes('Discipline')) ALL_COLUMNS.push('Discipline');
 
-                     initializeColumnVisibility();
-                     populateColumnSelector();
-                     if (rawData.length > 0) {
-                        populateFiltersViewer(zoneKey, contractorKey, responsibleKey);
-                     } else {
-                        console.warn("Ingen rækker i rawData, springer over populateFiltersViewer.");
-                     }
-                     applyFiltersAndSearch(); // Dette kalder displayDataViewer som kalder createTableRow
-                     applyColumnVisibility();
+            // Initialiser kolonnevisning og opdater UI
+            initializeColumnVisibility();
+            populateColumnSelector();
+            populateFiltersViewer(zoneKey, contractorKey, responsibleKey);
+            applyFiltersAndSearch();
+            applyColumnVisibility();
+        } else {
+            tableBody.innerHTML = `<tr><td colspan="15">Ingen data fundet i filen.</td></tr>`;
+            resetSummaryBox();
+        }
+    }
 
-                 } else {
-                     alert("CSV-filen er tom eller kunne ikke parses korrekt.");
-                     tableBody.innerHTML = `<tr><td colspan="15">Kunne ikke indlæse data. Tjek CSV format.</td></tr>`;
-                     resetSummaryBox();
-                 }
-             } catch (error) {
-                 console.error("Fejl ved indlæsning/behandling af CSV:", error);
-                 alert(`Der opstod en fejl: ${error.message}. Tjek konsollen.`);
-                 tableBody.innerHTML = `<tr><td colspan="15">Fejl ved indlæsning af data. Tjek CSV format og konsol.</td></tr>`;
-                 resetSummaryBox();
-             }
-         };
-         reader.onerror = function(err) {
-             console.error("Fejl ved læsning af fil:", err); alert("Fejl under læsning af filen."); tableBody.innerHTML = `<tr><td colspan="15">Fejl under læsning af fil.</td></tr>`; resetSummaryBox();
-         };
-         reader.readAsText(file, 'UTF-8');
+    function handleFileSelectViewer(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        document.getElementById('viewerFileName').textContent = file.name;
+        document.getElementById('viewerFileName').title = file.name;
+
+        // Reset table and summary box
+        tableBody.innerHTML = `<tr><td colspan="15">Indlæser fil...</td></tr>`;
+        resetSummaryBox();
+
+        const reader = new FileReader();
+        
+        reader.onerror = function(err) {
+            console.error("Fejl ved læsning af fil:", err);
+            alert("Der opstod en fejl under læsning af filen.");
+            tableBody.innerHTML = `<tr><td colspan="15">Fejl under læsning af fil.</td></tr>`;
+            resetSummaryBox();
+        };
+
+        try {
+            if (file.name.toLowerCase().endsWith('.csv')) {
+                // Håndter CSV fil
+                reader.onload = function(e) {
+                    try {
+                        const text = e.target.result;
+                        const data = parseCSV(text);
+                        processData(data);
+                    } catch (error) {
+                        console.error("Fejl ved behandling af CSV:", error);
+                        alert(`Der opstod en fejl: ${error.message}`);
+                        tableBody.innerHTML = `<tr><td colspan="15">Fejl ved behandling af CSV data.</td></tr>`;
+                        resetSummaryBox();
+                    }
+                };
+                reader.readAsText(file);
+            } else if (file.name.toLowerCase().endsWith('.xlsx')) {
+                // Håndter XLSX fil
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        
+                        // Konverter XLSX data med specifikke formateringsindstillinger
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, {
+                            raw: false,  // Returnér formaterede værdier
+                            dateNF: 'dd/mm/yyyy',  // Dato format
+                            defval: ''  // Standard værdi for tomme celler
+                        });
+
+                        // Konverter Excel serielle datoer til korrekt format
+                        jsonData.forEach(row => {
+                            // Håndter start dato
+                            if (row['(*)Start']) {
+                                const startDate = parseFlexibleDate(row['(*)Start']);
+                                if (startDate) {
+                                    row['(*)Start'] = formatDateForDisplay(startDate.toISOString());
+                                }
+                            }
+                            
+                            // Håndter slut dato
+                            if (row['(*)Finish']) {
+                                const finishDate = parseFlexibleDate(row['(*)Finish']);
+                                if (finishDate) {
+                                    row['(*)Finish'] = formatDateForDisplay(finishDate.toISOString());
+                                }
+                            }
+
+                            // Håndter procent færdig
+                            if (row['Activity % Complete(%)'] !== undefined) {
+                                // Konverter til tal og formater som heltal
+                                const percent = parseFloatLocal(row['Activity % Complete(%)']);
+                                row['Activity % Complete(%)'] = percent.toString();
+                            }
+                        });
+
+                        processData(jsonData);
+                    } catch (error) {
+                        console.error("Fejl ved behandling af XLSX:", error);
+                        alert(`Der opstod en fejl: ${error.message}`);
+                        tableBody.innerHTML = `<tr><td colspan="15">Fejl ved behandling af XLSX data.</td></tr>`;
+                        resetSummaryBox();
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        } catch (error) {
+            console.error("Fejl ved håndtering af fil:", error);
+            alert(`Der opstod en fejl: ${error.message}`);
+            tableBody.innerHTML = `<tr><td colspan="15">Fejl ved håndtering af fil.</td></tr>`;
+            resetSummaryBox();
+        }
     }
 
     function clearDropdownOptions(selectElement) { /* ... (uændret) ... */ if(selectElement) selectElement.innerHTML = '<option value="">Alle</option>'; }
@@ -214,14 +325,141 @@ document.addEventListener('DOMContentLoaded', () => {
          updateSortIconsViewer();
     }
     function updateSortIconsViewer() { /* ... (uændret) ... */ if (!tableHeaderRow) return; tableHeaderRow.querySelectorAll('th .sort-icon').forEach(icon => icon.textContent = ''); const currentTh = tableHeaderRow.querySelector(`th[data-column="${currentSort.column}"]`); if (currentTh) { const iconSpan = currentTh.querySelector('.sort-icon'); if (iconSpan) iconSpan.textContent = currentSort.direction === 'asc' ? ' ▲' : ' ▼'; } }
-    function displayDataViewer(data) { /* ... (uændret) ... */
-         if(!tableBody) return; tableBody.innerHTML = ''; const visibleColumnCount = getVisibleColumnCount(); if (data.length === 0) { tableBody.innerHTML = `<tr><td colspan="${visibleColumnCount}">Ingen data matcher de valgte filtre.</td></tr>`; return; }
-         if (currentGrouping) { const groups = data.reduce((acc, row) => { const groupKey = row[currentGrouping] || 'Ikke specificeret'; if (!acc[groupKey]) { acc[groupKey] = []; } acc[groupKey].push(row); return acc; }, {}); const sortedGroupKeys = Object.keys(groups).sort((a, b) => { const aStr = String(a || ''); const bStr = String(b || ''); if (currentGrouping === 'Building') { const isABuilding = aStr.match(/^B(\d+)$/); const isBBuilding = bStr.match(/^B(\d+)$/); if (isABuilding && isBBuilding) return parseInt(isABuilding[1]) - parseInt(isBBuilding[1]); if (isABuilding) return -1; if (isBBuilding) return 1; } return aStr.localeCompare(bStr, undefined, {numeric: true, sensitivity: 'base'}); }); sortedGroupKeys.forEach(groupKey => { const groupRows = groups[groupKey]; const groupClass = sanitizeForCSSClass(groupKey); const groupHeader = document.createElement('tr'); groupHeader.className = `group-header ${groupClass}`; groupHeader.dataset.groupClass = groupClass; groupHeader.innerHTML = `<td colspan="${visibleColumnCount}">${escapeHtml(groupKey)} (${groupRows.length} opg.)</td>`; tableBody.appendChild(groupHeader); groupRows.forEach(row => { const tr = createTableRow(row); tr.classList.add(groupClass); tr.classList.add('data-row'); tableBody.appendChild(tr); }); }); } else { data.forEach(row => { const tr = createTableRow(row); tr.classList.add('data-row'); tableBody.appendChild(tr); }); }
+    function displayDataViewer(data) {
+        if (!tableBody) return;
+        tableBody.innerHTML = '';
+        
+        if (data.length === 0) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td colspan="${getVisibleColumnCount()}">Ingen resultater fundet.</td>`;
+            tableBody.appendChild(tr);
+            return;
+        }
+        
+        if (currentGrouping) {
+            // Group the data
+            const groups = {};
+            data.forEach(row => {
+                const groupValue = row[currentGrouping] || '';
+                if (!groups[groupValue]) {
+                    groups[groupValue] = [];
+                }
+                groups[groupValue].push(row);
+            });
+            
+            // Sort group keys
+            const sortedGroups = Object.keys(groups).sort((a, b) => {
+                if (currentGrouping === 'Building') {
+                    const aMatch = a.match(/^B(\d+)$/);
+                    const bMatch = b.match(/^B(\d+)$/);
+                    if (aMatch && bMatch) {
+                        return parseInt(aMatch[1]) - parseInt(bMatch[1]);
+                    }
+                }
+                return a.localeCompare(b);
+            });
+            
+            // Create rows for each group
+            sortedGroups.forEach(groupValue => {
+                const groupClass = sanitizeForCSSClass(groupValue);
+                
+                // Add group header
+                const headerRow = document.createElement('tr');
+                headerRow.className = 'group-header';
+                headerRow.dataset.groupClass = groupClass;
+                const headerCell = document.createElement('td');
+                headerCell.colSpan = getVisibleColumnCount();
+                headerCell.textContent = groupValue || '(Ingen værdi)';
+                headerRow.appendChild(headerCell);
+                tableBody.appendChild(headerRow);
+                
+                // Add data rows for this group
+                groups[groupValue].forEach(rowData => {
+                    const tr = createTableRow(rowData, groupClass);
+                    tableBody.appendChild(tr);
+                });
+            });
+        } else {
+            // No grouping, just add all rows
+            data.forEach(rowData => {
+                const tr = createTableRow(rowData);
+                tableBody.appendChild(tr);
+            });
+        }
     }
-    function createTableRow(row) { /* ... (uændret) ... */
-         const tr = document.createElement('tr'); const finishDate = parseFlexibleDate(row['(*)Finish']); const startDate = parseFlexibleDate(row['(*)Start']); const percentage = parseFloatLocal(row['Activity % Complete(%)']); const isRowOverdue = checkOverdue(finishDate, percentage); const isRowNearDue = checkNearDue(finishDate, percentage); tr.className = 'data-row'; if (percentage >= 100) tr.classList.add('completed'); else if (isRowOverdue) tr.classList.add('overdue'); else if (isRowNearDue) tr.classList.add('near-due'); let rowHtml = ''; if(tableHeaderRow) tableHeaderRow.querySelectorAll('th').forEach(th => { const columnKey = th.dataset.column; if (!columnKey) return; const isVisible = columnVisibility[columnKey]; if (isVisible) { let cellContent = row[columnKey] !== undefined && row[columnKey] !== null ? row[columnKey] : ''; let titleAttr = ''; const tdClasses = th.className.replace('hidden-col', '').trim(); if (columnKey === '(*)Start' || columnKey === '(*)Finish') { cellContent = formatDateForDisplay(row[columnKey]); titleAttr = ` title="${escapeHtml(row[columnKey] || '')}"`; } else if (columnKey === 'Activity % Complete(%)') { cellContent = createProgressBar(percentage); } else if (typeof cellContent === 'string' && (columnKey === 'Activity Name' || columnKey === 'Comments')) { titleAttr = ` title="${escapeHtml(row[columnKey] || '')}"`; cellContent = escapeHtml(cellContent); } else if (typeof cellContent === 'string') { cellContent = escapeHtml(cellContent); } rowHtml += `<td class="${tdClasses}" data-column="${columnKey}"${titleAttr}>${cellContent}</td>`; } }); tr.innerHTML = rowHtml; return tr;
+    function createTableRow(rowData, groupClass = '') {
+        const tr = document.createElement('tr');
+        tr.className = 'data-row' + (groupClass ? ` ${groupClass}` : '');
+        
+        // Add status classes
+        const percentage = parseFloatLocal(rowData['Activity % Complete(%)']);
+        const finishDate = parseFlexibleDate(rowData['(*)Finish']);
+        const startDate = parseFlexibleDate(rowData['(*)Start']);
+        
+        if (checkOverdue(finishDate, percentage)) {
+            tr.classList.add('overdue');
+        } else if (checkNearDue(finishDate, percentage)) {
+            tr.classList.add('near-due');
+        }
+        if (percentage >= 100) {
+            tr.classList.add('completed');
+        }
+        
+        // Create cells for each visible column
+        tableHeaderRow.querySelectorAll('th').forEach(th => {
+            const columnKey = th.dataset.column;
+            if (!columnKey) return;
+            
+            const td = document.createElement('td');
+            td.dataset.column = columnKey;
+            
+            if (columnVisibility[columnKey] === false) {
+                td.classList.add('hidden-col');
+            }
+            
+            // Special handling for percentage column
+            if (columnKey === 'Activity % Complete(%)') {
+                const percentageText = document.createElement('span');
+                percentageText.className = 'percentage-text';
+                percentageText.textContent = `${percentage}%`;
+                td.appendChild(percentageText);
+                
+                const progressBar = createProgressBar(percentage);
+                td.appendChild(progressBar);
+            } else {
+                // Regular cell content
+                td.textContent = rowData[columnKey] || '';
+            }
+            
+            tr.appendChild(td);
+        });
+        
+        return tr;
     }
-    function createProgressBar(percentage) { const p = Math.max(0, Math.min(100, parseFloatLocal(percentage))); let barClass = 'low'; if (p >= 100) barClass = 'complete'; else if (p > 66) barClass = 'high'; else if (p > 33) barClass = 'medium'; const displayPercent = p.toFixed(0) + '%'; /* Place text before the bar container */ return `<span class="percentage-text">${displayPercent}</span> <div class="progress-bar-container" title="${p.toFixed(1)}% Færdig"> <div class="progress-bar ${barClass}" style="width: ${p}%;"></div> </div>`; }
+    function createProgressBar(percentage) {
+        const container = document.createElement('div');
+        container.className = 'progress-bar-container';
+        
+        const bar = document.createElement('div');
+        bar.className = 'progress-bar';
+        
+        // Set the width of the progress bar
+        bar.style.width = `${percentage}%`;
+        
+        // Add appropriate class based on percentage
+        if (percentage >= 100) {
+            bar.classList.add('complete');
+        } else if (percentage >= 75) {
+            bar.classList.add('high');
+        } else if (percentage >= 25) {
+            bar.classList.add('medium');
+        } else {
+            bar.classList.add('low');
+        }
+        
+        container.appendChild(bar);
+        return container;
+    }
     function initializeColumnVisibility() { /* ... (uændret) ... */ columnVisibility = {}; ALL_COLUMNS.forEach(columnKey => { const th = tableHeaderRow ? tableHeaderRow.querySelector(`th[data-column="${columnKey}"]`) : null; columnVisibility[columnKey] = th ? !th.classList.contains('hidden-col') : true; }); }
     function populateColumnSelector() { /* ... (uændret) ... */
         if (!columnTogglesDiv) return; columnTogglesDiv.innerHTML = ''; const htmlOrder = tableHeaderRow ? Array.from(tableHeaderRow.querySelectorAll('th')).map(th => th.dataset.column).filter(Boolean) : []; const sortedColumns = [...ALL_COLUMNS].sort((a, b) => { const indexA = htmlOrder.indexOf(a); const indexB = htmlOrder.indexOf(b); if (indexA !== -1 && indexB !== -1) return indexA - indexB; if (indexA !== -1) return -1; if (indexB !== -1) return 1; return String(a).localeCompare(String(b)); }); sortedColumns.forEach(columnKey => { const thElement = tableHeaderRow ? tableHeaderRow.querySelector(`th[data-column="${columnKey}"]`) : null; const labelText = thElement ? thElement.textContent.replace(/▲|▼/g, '').trim() : columnKey; const div = document.createElement('div'); const label = document.createElement('label'); const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.value = columnKey; checkbox.id = `toggle-col-${columnKey.replace(/[^a-zA-Z0-9]/g, '-')}`; checkbox.checked = columnVisibility[columnKey] === undefined ? true : columnVisibility[columnKey]; label.htmlFor = checkbox.id; label.appendChild(checkbox); label.appendChild(document.createTextNode(` ${labelText}`)); div.appendChild(label); columnTogglesDiv.appendChild(div); });
@@ -309,5 +547,8 @@ document.addEventListener('DOMContentLoaded', () => {
     resetAllViewer();
     // checkCompareButtonState removed
     console.log("Tidsplan Viewer & Sammenligning (Touch Opt.) v2.3 initialiseret.");
+
+    // Opdater file input accept attribute
+    csvFileInput.accept = '.csv,.xlsx';
 
 }); // End of DOMContentLoaded
